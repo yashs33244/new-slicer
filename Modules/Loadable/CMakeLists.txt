@@ -6,31 +6,39 @@ include(${Slicer_CMAKE_DIR}/SlicerMacroBuildLoadableModule.cmake)
 # (so that include directories provided by B are available
 # when configuring module A).
 
+# Phase 1 — Data Visualization only.
+# Disabled modules are listed below and can be re-enabled in later phases.
 set(qtmodules
-  Cameras
-  Units
-  Terminologies
   SubjectHierarchy
-  Colors # Colors depends on SubjectHierarchy
-  Annotations
-  Transforms
-  GeneralizedReformat
+  Colors           # depends on SubjectHierarchy
   Data
   Models
-  Plots
-  Segmentations
-  Sequences
-  SceneViews # Scene views depends on Sequences
-  Markups # Markups depends on SceneViews (for testing) and Annotations
-  SlicerWelcome
-  Tables
-  Texts
-  Reformat
-  ViewControllers
   Volumes
-  VolumeRendering # Volume Rendering depends of Volumes
-  CropVolume # CropVolume depends of Volumes
+  VolumeRendering  # depends on Volumes
+  ViewControllers
   )
+
+# Phase 2+ (segmentation, annotation, transforms):
+#   Terminologies
+#   Annotations
+#   Transforms
+#   GeneralizedReformat
+#   Segmentations
+#   Markups          # depends on SceneViews, Annotations
+#   SceneViews       # depends on Sequences
+
+# Phase 3+ (analysis, sequences):
+#   Sequences
+#   Plots
+#   Tables
+#   Texts
+
+# Not needed for medical imaging workflow:
+#   Cameras
+#   Units
+#   SlicerWelcome
+#   Reformat
+#   CropVolume
 
 include(SlicerCheckModuleEnabled)
 

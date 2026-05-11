@@ -1,84 +1,34 @@
 
-#-----------------------------------------------------------------------------
-# WARNING: CLI modules should be topologically ordered.
-#-----------------------------------------------------------------------------
-set(cli_modules
-  AddScalarVolumes
-  CastScalarVolume
-  CheckerBoardFilter
-  CurvatureAnisotropicDiffusion
-  ExecutionModelTour
-  ExtractSkeleton
-  GaussianBlurImageFilter
-  GradientAnisotropicDiffusion
-  GrayscaleFillHoleImageFilter
-  GrayscaleGrindPeakImageFilter
-  GrayscaleModelMaker
-  HistogramMatching
-  ImageLabelCombine
-  LabelMapSmoothing
-  MaskScalarVolume
-  MedianImageFilter
-  MergeModels
-  ModelMaker
-  ModelToLabelMap
-  MultiplyScalarVolumes
-  N4ITKBiasFieldCorrection
-  OrientScalarVolume
-  ProbeVolumeWithModel
-  ResampleDTIVolume # Needed by ResampleScalarVectorDWIVolume (compile time dependency)
-  ResampleScalarVectorDWIVolume # Depends on DiffusionApplications, needed by CropVolume (runtime dependency)
-  RobustStatisticsSegmenter
-  SimpleRegionGrowingSegmentation
-  SubtractScalarVolumes
-  ThresholdScalarVolume
-  VotingBinaryHoleFillingImageFilter
-  )
-if(BUILD_TESTING)
-  list(APPEND cli_modules ROITest)
-endif()
+# Phase 1 — No CLI processing modules needed for data visualization.
+# All CLI modules are image processing algorithms (filters, segmentation, etc.)
+# and will be re-enabled in later phases alongside those features.
 
-if(Slicer_BUILD_DICOM_SUPPORT)
-  list(APPEND cli_modules CreateDICOMSeries)
-  list(APPEND cli_modules PETStandardUptakeValueComputation)
-endif()
+# Phase 2+ (re-enable as needed):
+#   GrayscaleModelMaker / ModelMaker      — DICOM-to-surface pipeline
+#   N4ITKBiasFieldCorrection              — volume pre-processing
+#   ResampleScalarVectorDWIVolume         — needed by CropVolume
+#   CreateDICOMSeries                     — DICOM export
+#   PETStandardUptakeValueComputation     — PET analysis
+#   ... (full original list preserved below for reference)
+#
+# Original full list:
+#   AddScalarVolumes, CastScalarVolume, CheckerBoardFilter,
+#   CurvatureAnisotropicDiffusion, ExecutionModelTour, ExtractSkeleton,
+#   GaussianBlurImageFilter, GradientAnisotropicDiffusion,
+#   GrayscaleFillHoleImageFilter, GrayscaleGrindPeakImageFilter,
+#   GrayscaleModelMaker, HistogramMatching, ImageLabelCombine,
+#   LabelMapSmoothing, MaskScalarVolume, MedianImageFilter,
+#   MergeModels, ModelMaker, ModelToLabelMap, MultiplyScalarVolumes,
+#   N4ITKBiasFieldCorrection, OrientScalarVolume, ProbeVolumeWithModel,
+#   ResampleDTIVolume, ResampleScalarVectorDWIVolume,
+#   RobustStatisticsSegmenter, SimpleRegionGrowingSegmentation,
+#   SubtractScalarVolumes, ThresholdScalarVolume,
+#   VotingBinaryHoleFillingImageFilter,
+#   ROITest (testing only),
+#   CreateDICOMSeries, PETStandardUptakeValueComputation (DICOM),
+#   FiducialRegistration, ResampleScalarVolume (legacy)
 
-if(Slicer_BUILD_LEGACY_CLI)
-  set(legacy_cli_modules
-    FiducialRegistration
-    ResampleScalarVolume
-    )
-  if(BUILD_TESTING)
-    list(APPEND legacy_cli_modules
-      DiffusionTensorTest
-      TestGridTransformRegistration
-      )
-  endif()
-  list(APPEND cli_modules ${legacy_cli_modules})
-endif()
-
-if(BUILD_TESTING)
-  # TODO Since the following snippet have been moved from CLI/Testing/CMakeLists.txt into
-  # CLI/CMakeLists.txt, the variable SLICER_BRAINWEB_DATA_ROOT won't be set properly.
-  # Configure the default SLICER_BRAINWEB_DATA_ROOT for the location of BrainWeb Data.
-  # When this data is available, additional 3D tests are enabled.
-  find_path(SLICER_BRAINWEB_DATA_ROOT brainweb165a10f17.mha
-    DOC "Directory with data taken from https://public.kitware.com/pub/itk/Data/BrainWeb/")
-  mark_as_advanced(SLICER_BRAINWEB_DATA_ROOT)
-
-  # Set CLI testing directories as cache variable so that it can be used by
-  # remote module SlicerDMRI included from top-level CMakeLists.txt
-  set(BASELINE "${Slicer_SOURCE_DIR}/Testing/Data/Baseline/CLI"
-    CACHE PATH "MRML CLI baseline directory")
-  set(TEST_DATA "${Slicer_SOURCE_DIR}/Testing/Data/Input"
-    CACHE PATH "MRML CLI testing input data directory")
-  set(MRML_TEST_DATA "${Slicer_SOURCE_DIR}/Libs/MRML/Core/Testing/TestData"
-    CACHE PATH "MRML CLI testing common data directory")
-  set(TEMP "${Slicer_BINARY_DIR}/Testing/Temporary"
-    CACHE PATH "MRML CLI testing temp directory")
-
-  set(MRML_DATA "${Slicer_HOME}/share/MRML/Testing/TestData")
-endif()
+set(cli_modules)
 
 include(SlicerCheckModuleEnabled)
 

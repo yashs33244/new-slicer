@@ -12,21 +12,21 @@ ModuleName/
   Testing/
 ```
 
-## Adding a New Loadable Module
-1. Copy an existing simple module (e.g. `Texts/`)
-2. Rename all classes/files
-3. Register in parent `CMakeLists.txt` via `add_subdirectory`
-4. Module auto-discovered at runtime via `qSlicerModuleFactory`
+## Phase 1 Active Modules
+| Module | Purpose |
+|--------|---------|
+| `SubjectHierarchy` | Data tree / organization panel |
+| `Colors` | Color tables for display (depends on SubjectHierarchy) |
+| `Data` | Scene data panel |
+| `Models` | 3D surface mesh viewing |
+| `Volumes` | Volume (slice) display and loading |
+| `VolumeRendering` | 3D volume rendering (depends on Volumes) |
+| `ViewControllers` | Per-view axis/orientation controls |
 
-## Key Modules Reference
-| Module | Notes |
-|--------|-------|
-| `Volumes` | Volume display/loading |
-| `Markups` | Fiducials, ROIs, curves, planes |
-| `Segmentations` | Label maps + segment editor backend |
-| `Models` | Surface mesh display |
-| `SubjectHierarchy` | Tree-based data organization |
-| `Sequences` | Time-series node sequences |
+## Disabled in Phase 1 (see CMakeLists.txt comments for phase targets)
+Segmentations, Markups, Transforms, Sequences, Plots, Tables, Texts,
+Annotations, Cameras, Units, SlicerWelcome, Reformat, CropVolume,
+GeneralizedReformat, SceneViews
 
 ## UI Files
 `.ui` files live in `Resources/UI/`. Edit with Qt Designer. CMake wraps them via `set(MODULE_UI_SRCS ...)`.

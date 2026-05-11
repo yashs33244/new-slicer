@@ -41,16 +41,15 @@ jobs:
               - "Testing/**"
               - "CMakeLists.txt"
 
-      # Retrieve changes in SuperBuild-related files relative to the 'nightly-main' branch.
-      # continue-on-error: nightly-main may not exist in forks; failure here must not block CI.
+      # Retrieve changes in SuperBuild-related files relative to the 'main' branch.
+      # (upstream uses nightly-main which does not exist in forks)
       - name: "Detect SuperBuild Changes"
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         id: superbuild-changes
-        continue-on-error: true
         with:
           files: |
             SuperBuild/External_*
-          base_sha: nightly-main
+          base_sha: main
 
       # List any SuperBuild files that were changed
       - name: "List Changed SuperBuild Files"

@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
 
       # Filter paths to determine whether to proceed with the build
       - name: "Filter Paths"
@@ -39,10 +41,12 @@ jobs:
               - "Testing/**"
               - "CMakeLists.txt"
 
-      # Retrieve changes in SuperBuild-related files relative to the 'nightly-main' branch
+      # Retrieve changes in SuperBuild-related files relative to the 'nightly-main' branch.
+      # continue-on-error: nightly-main may not exist in forks; failure here must not block CI.
       - name: "Detect SuperBuild Changes"
         uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
         id: superbuild-changes
+        continue-on-error: true
         with:
           files: |
             SuperBuild/External_*

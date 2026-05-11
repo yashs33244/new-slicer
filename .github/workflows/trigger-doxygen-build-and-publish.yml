@@ -1,13 +1,18 @@
 name: Trigger Doxygen Build and Publish
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - v*
+  # Disabled automatic triggers: this workflow requires upstream Slicer org
+  # GitHub App credentials (SLICER_APP_ID / SLICER_APP_PRIVATE_KEY) that are
+  # not available in this fork. Remove the comment below to re-enable if those
+  # secrets are ever configured.
+  #
+  # push:
+  #   branches:
+  #     - main
+  #   tags:
+  #     - v*
 
-  # Allows running this workflow manually from the Actions tab
+  # Manual trigger kept so it can still be run explicitly if needed.
   workflow_dispatch:
     inputs:
       slicer_repository:

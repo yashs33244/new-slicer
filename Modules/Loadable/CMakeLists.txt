@@ -11,20 +11,20 @@ include(${Slicer_CMAKE_DIR}/SlicerMacroBuildLoadableModule.cmake)
 set(qtmodules
   SubjectHierarchy
   Colors           # depends on SubjectHierarchy
+  Annotations      # build-time dep of Markups (vtkSlicerAnnotationModuleLogic header)
+  Markups          # build-time dep of VolumeRendering (vtkMRMLMarkupsROINode clipping box)
   Data
   Models
   Volumes
-  VolumeRendering  # depends on Volumes
+  VolumeRendering  # depends on Volumes and Markups
   ViewControllers
   )
 
-# Phase 2+ (segmentation, annotation, transforms):
+# Phase 2+ (segmentation, transforms):
 #   Terminologies
-#   Annotations
 #   Transforms
 #   GeneralizedReformat
 #   Segmentations
-#   Markups          # depends on SceneViews, Annotations
 #   SceneViews       # depends on Sequences
 
 # Phase 3+ (analysis, sequences):

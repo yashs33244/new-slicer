@@ -367,7 +367,8 @@ void qSlicerMainWindowPrivate::setupUi(QMainWindow* mainWindow)
 
   this->ErrorLogToggleViewAction->setIcon(this->ErrorLogIconNormal);
 
-  this->ViewMenu->insertAction(this->ModuleHomeAction, this->ErrorLogToggleViewAction);
+  // Error Log dock widget exists for internal error tracking but is not exposed
+  // in the menu for this medical-application build (Phase 1).
 
   // Change orientation depending on where the widget is docked
   QObject::connect(this->ErrorLogDockWidget, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), q, SLOT(onErrorLogDockWidgetAreaChanged(Qt::DockWidgetArea)));
@@ -409,9 +410,9 @@ void qSlicerMainWindowPrivate::setupUi(QMainWindow* mainWindow)
     this->PythonConsoleToggleViewAction->setToolTip(qSlicerMainWindow::tr("Show Python Console window for controlling the application's data, user interface, and internals"));
     this->PythonConsoleToggleViewAction->setShortcuts({ qSlicerMainWindow::tr("Ctrl+3"), qSlicerMainWindow::tr("Ctrl+`") });
     QObject::connect(this->PythonConsoleToggleViewAction, SIGNAL(toggled(bool)), q, SLOT(onPythonConsoleToggled(bool)));
-    this->ViewMenu->insertAction(this->ModuleHomeAction, this->PythonConsoleToggleViewAction);
     this->PythonConsoleToggleViewAction->setIcon(QIcon(":/python-icon.png"));
-    this->DialogToolBar->addAction(this->PythonConsoleToggleViewAction);
+    // Python Console is available internally but not exposed in the UI for this
+    // medical-application build (Phase 1).
   }
   else
   {

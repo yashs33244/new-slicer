@@ -221,7 +221,7 @@ jobs:
         with:
           version: "6.8.*"
           arch: win64_msvc2022_64
-          modules: "qt5compat qtmultimedia"
+          modules: "qt5compat qtmultimedia qtscxml"
           cache: true
 
       - name: "Cache SuperBuild dependencies"

@@ -154,6 +154,7 @@ jobs:
                 -B "$RUNNER_TEMP/SB-build" \
                 -GNinja \
                 -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_OSX_SYSROOT="$(xcrun --sdk macosx --show-sdk-path)" \
                 -DQt6_DIR="$Qt6_DIR" \
                 -DSlicer_RELEASE_TYPE=Experimental
 
@@ -217,8 +218,9 @@ jobs:
         if: steps.changes.outputs.paths-to-include == 'true'
         uses: jurplel/install-qt-action@v4
         with:
-          version: '6.5.*'
-          arch: win64_msvc2019_64
+          version: '6.8.*'
+          arch: win64_msvc2022_64
+          modules: 'qtmultimedia'
           cache: true
 
       - name: "Cache SuperBuild dependencies"

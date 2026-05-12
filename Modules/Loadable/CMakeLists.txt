@@ -7,33 +7,32 @@ include(${Slicer_CMAKE_DIR}/SlicerMacroBuildLoadableModule.cmake)
 # when configuring module A).
 
 # Phase 1 — Data Visualization only.
-# Order matters: each entry must appear after its dependencies.
-# Infrastructure modules are included even if not user-facing, because
-# they are compile-time or link-time dependencies of the kept modules.
+# Order follows the original upstream order to preserve dependency resolution.
+# Modules marked "infrastructure" are not user-facing but are compile-time or
+# link-time dependencies (including test deps) of the Phase 1 feature modules.
 set(qtmodules
-  Cameras          # infrastructure: Data depends on vtkSlicerCamerasModuleLogic
-  Terminologies    # infrastructure: SubjectHierarchy/Widgets depends on qSlicerTerminologiesModuleWidgets
+  Cameras          # infrastructure: Data links vtkSlicerCamerasModuleLogic
+  Terminologies    # infrastructure: SubjectHierarchy/Widgets links qSlicerTerminologiesModuleWidgets
   SubjectHierarchy
   Colors           # depends on SubjectHierarchy
-  Annotations      # infrastructure: Markups depends on vtkSlicerAnnotationModuleLogic header
-  Markups          # infrastructure: VolumeRendering depends on vtkMRMLMarkupsROINode clipping box
+  Annotations      # infrastructure: Markups compiles qSlicerAnnotationsReader (needs vtkSlicerAnnotationModuleLogic)
+  Sequences        # infrastructure: SceneViews links vtkSlicerSequencesModuleMRML;
+                   #                 Sequences tests use vtkSlicerTablesLogic -> Tables also needed
+  Tables           # infrastructure: Sequences tests link vtkSlicerTablesLogic
+  SceneViews       # infrastructure: Markups tests include vtkSlicerSceneViewsModuleLogic.h (BUILD_TESTING)
+  Markups          # infrastructure: VolumeRendering links vtkMRMLMarkupsROINode clipping box
   Data             # depends on Cameras
   Models
   Volumes
-  VolumeRendering  # depends on Volumes and Markups
+  VolumeRendering  # depends on Volumes + Markups
   ViewControllers
   )
 
-# Phase 2+ (segmentation, transforms):
+# Phase 2+ (re-enable alongside those features):
 #   Transforms
 #   GeneralizedReformat
 #   Segmentations
-#   SceneViews       # depends on Sequences
-
-# Phase 3+ (analysis, sequences):
-#   Sequences
 #   Plots
-#   Tables
 #   Texts
 
 # Not needed for medical imaging workflow:

@@ -156,7 +156,10 @@ jobs:
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_OSX_SYSROOT="$(xcrun --sdk macosx --show-sdk-path)" \
                 -DQt6_DIR="$Qt6_DIR" \
-                -DSlicer_RELEASE_TYPE=Experimental
+                -DSlicer_RELEASE_TYPE=Experimental \
+                -DSlicer_BUILD_WEBENGINE_SUPPORT=OFF \
+                -DSlicer_BUILD_EXTENSIONMANAGER_SUPPORT=OFF \
+                -DSlicer_BUILD_APPLICATIONUPDATE_SUPPORT=OFF
 
       - name: "Build Slicer"
         if: steps.changes.outputs.paths-to-include == 'true' && steps.superbuild-changes.outputs.any_changed == 'false'
@@ -243,7 +246,10 @@ jobs:
                 -G "Visual Studio 17 2022" -A x64 `
                 -DCMAKE_BUILD_TYPE=Release `
                 -DQt6_DIR="$env:Qt6_DIR" `
-                -DSlicer_RELEASE_TYPE=Experimental
+                -DSlicer_RELEASE_TYPE=Experimental `
+                -DSlicer_BUILD_WEBENGINE_SUPPORT=OFF `
+                -DSlicer_BUILD_EXTENSIONMANAGER_SUPPORT=OFF `
+                -DSlicer_BUILD_APPLICATIONUPDATE_SUPPORT=OFF
 
       - name: "Build Slicer"
         if: steps.changes.outputs.paths-to-include == 'true' && steps.superbuild-changes.outputs.any_changed == 'false'

@@ -130,12 +130,20 @@ jobs:
             SuperBuild/External_*
           base_sha: main
 
-      - name: "Install build dependencies"
+      - name: "Install build tools"
         if: steps.changes.outputs.paths-to-include == 'true'
-        run: |
-          brew install cmake ninja
-          brew install qt@6
-          echo "Qt6_DIR=$(brew --prefix qt@6)/lib/cmake/Qt6" >> $GITHUB_ENV
+        run: brew install cmake ninja
+
+      - name: "Install Qt6"
+        if: steps.changes.outputs.paths-to-include == 'true'
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.*"
+          host: mac
+          target: desktop
+          arch: clang_64
+          modules: "qt5compat qtmultimedia qtscxml"
+          cache: true
 
       - name: "Cache SuperBuild dependencies"
         if: steps.changes.outputs.paths-to-include == 'true'

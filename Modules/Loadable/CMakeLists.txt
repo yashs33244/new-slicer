@@ -7,13 +7,17 @@ include(${Slicer_CMAKE_DIR}/SlicerMacroBuildLoadableModule.cmake)
 # when configuring module A).
 
 # Phase 1 — Data Visualization only.
-# Disabled modules are listed below and can be re-enabled in later phases.
+# Order matters: each entry must appear after its dependencies.
+# Infrastructure modules are included even if not user-facing, because
+# they are compile-time or link-time dependencies of the kept modules.
 set(qtmodules
+  Cameras          # infrastructure: Data depends on vtkSlicerCamerasModuleLogic
+  Terminologies    # infrastructure: SubjectHierarchy/Widgets depends on qSlicerTerminologiesModuleWidgets
   SubjectHierarchy
   Colors           # depends on SubjectHierarchy
-  Annotations      # build-time dep of Markups (vtkSlicerAnnotationModuleLogic header)
-  Markups          # build-time dep of VolumeRendering (vtkMRMLMarkupsROINode clipping box)
-  Data
+  Annotations      # infrastructure: Markups depends on vtkSlicerAnnotationModuleLogic header
+  Markups          # infrastructure: VolumeRendering depends on vtkMRMLMarkupsROINode clipping box
+  Data             # depends on Cameras
   Models
   Volumes
   VolumeRendering  # depends on Volumes and Markups
@@ -21,7 +25,6 @@ set(qtmodules
   )
 
 # Phase 2+ (segmentation, transforms):
-#   Terminologies
 #   Transforms
 #   GeneralizedReformat
 #   Segmentations
@@ -34,7 +37,6 @@ set(qtmodules
 #   Texts
 
 # Not needed for medical imaging workflow:
-#   Cameras
 #   Units
 #   SlicerWelcome
 #   Reformat

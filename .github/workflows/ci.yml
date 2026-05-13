@@ -154,6 +154,7 @@ jobs:
           key: macos14-sb-${{ hashFiles('SuperBuild/External_*.cmake', 'CMake/ExternalProject*.cmake') }}
           restore-keys: |
             macos14-sb-
+          save-always: true
 
       - name: "Configure SuperBuild"
         if: steps.changes.outputs.paths-to-include == 'true' && steps.sb-cache.outputs.cache-hit != 'true'
@@ -167,7 +168,8 @@ jobs:
                 -DSlicer_RELEASE_TYPE=Experimental \
                 -DSlicer_BUILD_WEBENGINE_SUPPORT=OFF \
                 -DSlicer_BUILD_EXTENSIONMANAGER_SUPPORT=OFF \
-                -DSlicer_BUILD_APPLICATIONUPDATE_SUPPORT=OFF
+                -DSlicer_BUILD_APPLICATIONUPDATE_SUPPORT=OFF \
+                -DSlicer_BUILD_I18N_SUPPORT=OFF
 
       - name: "Build Slicer"
         if: steps.changes.outputs.paths-to-include == 'true' && steps.superbuild-changes.outputs.any_changed == 'false'
@@ -244,6 +246,7 @@ jobs:
           key: windows-sb-${{ hashFiles('SuperBuild/External_*.cmake', 'CMake/ExternalProject*.cmake') }}
           restore-keys: |
             windows-sb-
+          save-always: true
 
       - name: "Configure SuperBuild"
         if: steps.changes.outputs.paths-to-include == 'true' && steps.sb-cache.outputs.cache-hit != 'true'
@@ -257,7 +260,8 @@ jobs:
                 -DSlicer_RELEASE_TYPE=Experimental `
                 -DSlicer_BUILD_WEBENGINE_SUPPORT=OFF `
                 -DSlicer_BUILD_EXTENSIONMANAGER_SUPPORT=OFF `
-                -DSlicer_BUILD_APPLICATIONUPDATE_SUPPORT=OFF
+                -DSlicer_BUILD_APPLICATIONUPDATE_SUPPORT=OFF `
+                -DSlicer_BUILD_I18N_SUPPORT=OFF
 
       - name: "Build Slicer"
         if: steps.changes.outputs.paths-to-include == 'true' && steps.superbuild-changes.outputs.any_changed == 'false'

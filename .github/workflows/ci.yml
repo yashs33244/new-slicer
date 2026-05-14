@@ -145,6 +145,14 @@ jobs:
           modules: "qt5compat qtmultimedia qtscxml"
           cache: true
 
+      - name: "Create Qt Frameworks symlinks"
+        if: steps.changes.outputs.paths-to-include == 'true'
+        run: |
+          mkdir -p "$QT_ROOT_DIR/lib/Frameworks"
+          for fw in "$QT_ROOT_DIR/lib"/Qt*.framework; do
+            ln -sfn "$fw" "$QT_ROOT_DIR/lib/Frameworks/$(basename "$fw")"
+          done
+
       - name: "Cache SuperBuild dependencies"
         if: steps.changes.outputs.paths-to-include == 'true'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
@@ -265,6 +273,7 @@ jobs:
 
       - name: "Build Slicer"
         if: steps.changes.outputs.paths-to-include == 'true' && steps.superbuild-changes.outputs.any_changed == 'false'
+        timeout-minutes: 330
         shell: pwsh
         run: |
           cmake --build "$env:RUNNER_TEMP\SB-build" --config Release --parallel

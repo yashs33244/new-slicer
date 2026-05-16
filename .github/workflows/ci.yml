@@ -229,7 +229,7 @@ jobs:
 
           # Extract .app from the DMG
           mkdir -p /tmp/dmg-mount
-          hdiutil attach "$DMG" -mountpoint /tmp/dmg-mount -nobrowse -readonly
+          hdiutil attach "$DMG" -mountpoint /tmp/dmg-mount -nobrowse -readonly -agreeToLicense
           APP=$(find /tmp/dmg-mount -name "Slicer.app" -maxdepth 2 | head -1)
           cp -aR "$APP" /tmp/Slicer.app
           hdiutil detach /tmp/dmg-mount

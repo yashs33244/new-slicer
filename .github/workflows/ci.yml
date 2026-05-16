@@ -93,12 +93,22 @@ jobs:
           retention-days: 7
 
   # ───────────────────────────────────────────────────────────────────────────
-  # macOS — native SuperBuild with Qt6 from Homebrew
-  # Note: first run compiles all deps (~3-4 h); subsequent runs use the cache.
+  # macOS — native SuperBuild on Apple Silicon, aligned with Slicer's official
+  # build recipe (Docs/developer_guide/build_instructions/macos.md).
+  #
+  # Notes
+  #   * macos-14 is arm64 (M1). Use macos-13 for x86_64.
+  #   * First run compiles VTK/ITK/CTK/Python/… (~3–4 h on a 3-core runner);
+  #     subsequent runs hit the SuperBuild cache and finish in ~25–40 min.
+  #   * Qt6 modules match the set Slicer requires per Windows docs (Qt5 Compat,
+  #     Multimedia, Positioning, Shader Tools, State Machines, WebChannel).
+  #     WebEngine is intentionally omitted because we set
+  #     Slicer_BUILD_WEBENGINE_SUPPORT=OFF.
   # ───────────────────────────────────────────────────────────────────────────
   build-slicer-macos:
     name: Build Slicer (macOS)
-    runs-on: macos-14 # Apple Silicon (M1); use macos-13 for Intel
+    runs-on: macos-14
+    timeout-minutes: 350 # GitHub Actions hard cap is 360
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -132,7 +142,11 @@ jobs:
 
       - name: "Install build tools"
         if: steps.changes.outputs.paths-to-include == 'true'
-        run: brew install cmake ninja
+        run: |
+          brew install cmake ninja
+          # Slicer docs require Xcode command-line tools; macos-14 runners ship
+          # them, but we assert their presence early to fail fast.
+          xcode-select -p >/dev/null
 
       - name: "Install Qt6"
         if: steps.changes.outputs.paths-to-include == 'true'
@@ -142,23 +156,34 @@ jobs:
           host: mac
           target: desktop
           arch: clang_64
-          modules: "qt5compat qtmultimedia qtscxml"
+          # Module set per upstream Slicer Windows docs (same Qt across OSes).
+          modules: "qt5compat qtmultimedia qtpositioning qtshadertools qtscxml qtwebchannel"
           cache: true
 
       - name: "Create Qt Frameworks symlinks"
         if: steps.changes.outputs.paths-to-include == 'true'
         run: |
+          # CTK looks under <Qt>/lib/Frameworks; aqtinstall puts them in <Qt>/lib.
           mkdir -p "$QT_ROOT_DIR/lib/Frameworks"
           for fw in "$QT_ROOT_DIR/lib"/Qt*.framework; do
             ln -sfn "$fw" "$QT_ROOT_DIR/lib/Frameworks/$(basename "$fw")"
           done
+
+      - name: "Prepare short build path"
+        if: steps.changes.outputs.paths-to-include == 'true'
+        # Slicer docs: "build folders must be located in a location with very
+        # short total path length" — they use /opt/s. /tmp/s is equivalent and
+        # writable on the runner without sudo.
+        run: |
+          sudo mkdir -p /opt/s
+          sudo chown -R "$(id -u):$(id -g)" /opt/s
 
       - name: "Cache SuperBuild dependencies"
         if: steps.changes.outputs.paths-to-include == 'true'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         id: sb-cache
         with:
-          path: ${{ runner.temp }}/SB-build
+          path: /opt/s
           key: macos14-arm64-sb-${{ hashFiles('SuperBuild/External_*.cmake', 'CMake/ExternalProject*.cmake') }}
           restore-keys: |
             macos14-arm64-sb-
@@ -168,7 +193,7 @@ jobs:
         if: steps.changes.outputs.paths-to-include == 'true' && steps.sb-cache.outputs.cache-hit != 'true'
         run: |
           cmake -S "$GITHUB_WORKSPACE" \
-                -B "$RUNNER_TEMP/SB-build" \
+                -B /opt/s \
                 -GNinja \
                 -DCMAKE_BUILD_TYPE=Release \
                 -DCMAKE_OSX_SYSROOT="$(xcrun --sdk macosx --show-sdk-path)" \
@@ -184,20 +209,62 @@ jobs:
       - name: "Build Slicer"
         if: steps.changes.outputs.paths-to-include == 'true' && steps.superbuild-changes.outputs.any_changed == 'false'
         run: |
-          cmake --build "$RUNNER_TEMP/SB-build" --parallel $(sysctl -n hw.ncpu)
+          cmake --build /opt/s --parallel "$(sysctl -n hw.ncpu)"
 
       - name: "Package (DMG)"
         if: steps.changes.outputs.paths-to-include == 'true' && steps.superbuild-changes.outputs.any_changed == 'false'
         run: |
-          cd "$RUNNER_TEMP/SB-build"
+          cd /opt/s
           cpack --config Slicer-build/CPackConfig.cmake -G DragNDrop
+
+      - name: "Fix rpaths and ad-hoc sign (macOS)"
+        if: steps.changes.outputs.paths-to-include == 'true' && steps.superbuild-changes.outputs.any_changed == 'false'
+        run: |
+          # aqt-installed Qt bakes absolute LC_RPATH entries into every binary.
+          # fixup_bundle rewrites LC_LOAD_DYLIB but never strips LC_RPATH, so
+          # dyld on user machines fails to find Qt. Strip all absolute rpaths
+          # then re-sign ad-hoc so the bundle is self-contained.
+          DMG=$(find /opt/s -maxdepth 1 -name "*.dmg" | head -1)
+          echo "Found DMG: $DMG"
+
+          # Extract .app from the DMG
+          mkdir -p /tmp/dmg-mount
+          hdiutil attach "$DMG" -mountpoint /tmp/dmg-mount -nobrowse -readonly
+          APP=$(find /tmp/dmg-mount -name "Slicer.app" -maxdepth 2 | head -1)
+          cp -aR "$APP" /tmp/Slicer.app
+          hdiutil detach /tmp/dmg-mount
+
+          # Strip every absolute LC_RPATH entry from every Mach-O binary
+          find /tmp/Slicer.app -type f | while read -r f; do
+            if file "$f" 2>/dev/null | grep -q "Mach-O"; then
+              otool -l "$f" 2>/dev/null \
+                | awk '/LC_RPATH/{found=1;next} found&&/path /{sub(/.*path /,"");sub(/ \(.*$/,"");print;found=0}' \
+                | grep "^/" \
+                | while read -r rpath; do
+                    install_name_tool -delete_rpath "$rpath" "$f" 2>/dev/null || true
+                  done
+            fi
+          done
+
+          # Ad-hoc codesign — makes the bundle self-consistent on any Mac
+          codesign --force --deep --sign - /tmp/Slicer.app
+
+          # Repack as DMG and replace the original
+          hdiutil create \
+            -volname "Slicer" \
+            -srcfolder /tmp/Slicer.app \
+            -ov -format UDZO \
+            /tmp/Slicer-signed.dmg
+          rm "$DMG"
+          mv /tmp/Slicer-signed.dmg "$DMG"
+          echo "Fixed DMG: $DMG"
 
       - name: "Upload Slicer package (macOS)"
         if: steps.changes.outputs.paths-to-include == 'true' && steps.superbuild-changes.outputs.any_changed == 'false'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: slicer-package-macos
-          path: ${{ runner.temp }}/SB-build/*.dmg
+          path: /opt/s/*.dmg
           retention-days: 7
 
   # ───────────────────────────────────────────────────────────────────────────
